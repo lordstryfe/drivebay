@@ -3,7 +3,7 @@ module.exports = {
     {
       method: "shell.run",
       params: {
-        message: "git reset --hard HEAD && git pull",
+        message: "git fetch origin && git reset --hard origin/main",
       },
     },
     {

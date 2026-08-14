@@ -1,3 +1,4 @@
-Drivebay for Pinokio — 3.11
+Drivebay for Pinokio — 3.12
 
-Removed leftover code that crashed the file list page.
+Home page no longer loads the file browser on the server.
+Update now force-resets to GitHub main.

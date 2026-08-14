@@ -24,8 +24,7 @@ console.log(
 
 const npmCmd = process.platform === "win32" ? "npm.cmd" : "npm";
 const child = spawn(
-  npmCmd,
-  ["run", "dev", "--", "--host", "0.0.0.0", "--port", String(port)],
+  `${npmCmd} run dev -- --host 0.0.0.0 --port ${port}`,
   {
     cwd: path.join(__dirname, "app"),
     stdio: "inherit",

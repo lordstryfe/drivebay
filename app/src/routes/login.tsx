@@ -162,6 +162,7 @@ function LoginPage() {
             {busy ? "Working…" : owned ? "Unlock" : "Create lock"}
           </Button>
         </form>
+        <p className="mt-4 text-center font-mono text-[10px] tracking-wide text-fg-subtle">3.12</p>
       </section>
     </main>
   );
