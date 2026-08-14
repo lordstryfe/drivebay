@@ -2,6 +2,7 @@
   "name": "drivebay",
   "private": true,
   "sideEffects": false,
+  "type": "commonjs",
   "overrides": {
     "nf3": "0.3.17"
   },

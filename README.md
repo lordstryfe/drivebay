@@ -5,25 +5,26 @@ Password-locked file browser for every drive on this machine. Built to run insid
 **Install this URL in Pinokio:**
 
 ```
-https://github.com/lordstryfe/drivebay
+https://github.com/lordstryfe/drivebay-pinokio
 ```
 
 ## Install in Pinokio (do this)
 
-1. If you already tried once, **delete the old copy first.** In File Explorer delete:
+1. Delete any old Drivebay folders first. In File Explorer delete these if they exist:
 
-   `Z:\pinokio\api\drivebay.git`
-
-   Do not skip this. Pinokio cannot update an app whose `pinokio.js` failed to load.
+   - `Z:\pinokio\api\drivebay.git`
+   - `Z:\pinokio\api\drivebay`
 
 2. Open **Pinokio**.
 3. Go to **Discover** (or **Download from URL**).
-4. Paste `https://github.com/lordstryfe/drivebay` and download.
+4. Paste `https://github.com/lordstryfe/drivebay-pinokio` and download.
 5. Click **Install**. Wait until it finishes.
 6. Click **Start**, then **Open Drivebay**.
 7. The first visit creates the **only** username and password. Pick something strong — Pinokio is already visible online, and this app can see every file on the machine.
 8. After that, anyone who opens it can only unlock. Nobody else can sign up.
 9. In the sidebar, open **X:**, **Z:**, and any other drives you want.
+
+If it loaded correctly you will see version **3.2**, and the folder will contain a file named `VERSION.txt`.
 
 ## After it is running
 

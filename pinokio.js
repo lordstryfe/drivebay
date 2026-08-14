@@ -1,5 +1,5 @@
 module.exports = {
-  version: "3.1",
+  version: "3.2",
   title: "Drivebay",
   description: "Password-locked file browser for every drive on this machine.",
   icon: "icon.png",

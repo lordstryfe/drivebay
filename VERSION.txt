@@ -1,0 +1,3 @@
+Drivebay for Pinokio — 3.2
+
+If this file exists, you have the copy that Pinokio can load.
