@@ -338,6 +338,78 @@ export async function listEntries(dirPath: string, showHidden: boolean): Promise
   return { path: resolved, parent: parentOf(resolved), entries };
 }
 
+const SKIP_DIR_NAMES = new Set([
+  "node_modules",
+  ".git",
+  ".svn",
+  ".hg",
+  "$recycle.bin",
+  "system volume information",
+  "windows",
+  "program files",
+  "program files (x86)",
+  "programdata",
+  "recovery",
+]);
+
+export async function searchEntries(
+  rootPath: string,
+  query: string,
+  showHidden: boolean,
+): Promise<import("./types").SearchResult> {
+  const needle = query.trim().toLowerCase();
+  if (needle.length < 2) throw new Error("Type at least 2 characters");
+  const root = resolveSafePath(rootPath);
+  const hits: import("./types").SearchHit[] = [];
+  let truncated = false;
+  let visits = 0;
+  const maxHits = 200;
+  const maxVisits = 5000;
+  const deadline = Date.now() + 8000;
+
+  async function walk(dir: string): Promise<void> {
+    if (truncated) return;
+    if (Date.now() > deadline || visits >= maxVisits || hits.length >= maxHits) {
+      truncated = true;
+      return;
+    }
+    visits += 1;
+    let names: string[];
+    try {
+      names = await fs.readdir(dir);
+    } catch {
+      return;
+    }
+    for (const name of names) {
+      if (truncated) return;
+      if (!showHidden && name.startsWith(".")) continue;
+      const lower = name.toLowerCase();
+      const full = path.join(dir, name);
+      let st;
+      try {
+        st = await fs.lstat(full);
+      } catch {
+        continue;
+      }
+      if (lower.includes(needle)) {
+        const entry = await toEntry(dir, name);
+        if (entry) hits.push({ ...entry, folder: dir });
+        if (hits.length >= maxHits) {
+          truncated = true;
+          return;
+        }
+      }
+      if (st.isDirectory() && !st.isSymbolicLink() && !SKIP_DIR_NAMES.has(lower)) {
+        await walk(full);
+      }
+    }
+  }
+
+  await walk(root);
+  hits.sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: "base" }));
+  return { root, query: needle, hits, truncated };
+}
+
 export async function createFolder(parentPath: string, name: string): Promise<string> {
   const parent = resolveSafePath(parentPath);
   const dest = path.join(parent, sanitizeName(name));

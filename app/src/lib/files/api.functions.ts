@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { authMiddleware } from "@/lib/auth/middleware";
-import type { DirListing, Drive, PreviewPayload } from "./types";
+import type { DirListing, Drive, PreviewPayload, SearchResult } from "./types";
 
 export const hasOwner = createServerFn({ method: "GET" }).handler(async () => {
   const { getSql } = await import("@/lib/db");
@@ -110,6 +110,20 @@ export const readFileBase64 = createServerFn({ method: "POST" })
       contentBase64: bytes.toString("base64"),
       size: st.size,
     };
+  });
+
+export const searchFiles = createServerFn({ method: "POST" })
+  .middleware([authMiddleware])
+  .validator(
+    z.object({
+      root: z.string().min(1),
+      query: z.string().min(2).max(120),
+      showHidden: z.boolean(),
+    }),
+  )
+  .handler(async ({ data }): Promise<SearchResult> => {
+    const fs = await import("./fs.server");
+    return fs.searchEntries(data.root, data.query, data.showHidden);
   });
 
 export const getSettings = createServerFn({ method: "GET" })

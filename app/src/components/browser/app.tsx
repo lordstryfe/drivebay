@@ -36,10 +36,11 @@ import {
   listEntries,
   readFileBase64,
   renameEntry,
+  searchFiles,
   uploadFile,
 } from "@/lib/files/api.functions";
 import { defaultStartPath, formatBytes, formatWhen, splitPath } from "@/lib/files/format";
-import type { DirListing, Drive, FsEntry, PreviewPayload } from "@/lib/files/types";
+import type { DirListing, Drive, FsEntry, PreviewPayload, SearchHit } from "@/lib/files/types";
 import { FileGlyph } from "@/components/file-icon";
 import { Button } from "@/components/ui/button";
 import {
@@ -72,6 +73,11 @@ export function FileBrowserApp() {
   const [path, setPath] = useState<string>("");
   const [showHidden, setShowHidden] = useState(false);
   const [query, setQuery] = useState("");
+  const [searchHits, setSearchHits] = useState<SearchHit[] | null>(null);
+  const [searching, setSearching] = useState(false);
+  const [searchTruncated, setSearchTruncated] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const searchRef = useRef<HTMLInputElement>(null);
   const [view, setView] = useState<ViewMode>("list");
   const [selected, setSelected] = useState<string | null>(null);
   const [preview, setPreview] = useState<PreviewPayload | null>(null);
@@ -95,11 +101,57 @@ export function FileBrowserApp() {
   const crumbs = useMemo(() => (listing ? splitPath(listing.path) : []), [listing]);
 
   const visible = useMemo(() => {
+    if (searchHits) return searchHits;
     const entries = listing?.entries ?? [];
     const q = query.trim().toLowerCase();
     if (!q) return entries;
     return entries.filter((e) => e.name.toLowerCase().includes(q));
-  }, [listing, query]);
+  }, [listing, query, searchHits]);
+
+  const runSearch = useCallback(async (raw = query) => {
+    const q = raw.trim();
+    if (q.length < 2) {
+      toast.error("Type at least 2 characters");
+      return;
+    }
+    const root = listing?.path || path;
+    if (!root) return;
+    setSearching(true);
+    try {
+      const result = await searchFiles({ data: { root, query: q, showHidden } });
+      setSearchHits(result.hits);
+      setSearchTruncated(result.truncated);
+      setSelected(result.hits[0]?.path ?? null);
+      if (result.hits.length === 0) toast.message(`No matches for “${q}”`);
+    } catch (err) {
+      toast.error(errMessage(err));
+    } finally {
+      setSearching(false);
+    }
+  }, [query, listing, path, showHidden]);
+
+  const clearSearch = useCallback(() => {
+    setSearchHits(null);
+    setSearchTruncated(false);
+    setQuery("");
+  }, []);
+
+  useEffect(() => {
+    function onHotkey(e: KeyboardEvent) {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setSearchOpen(true);
+        searchRef.current?.focus();
+        searchRef.current?.select();
+      }
+      if (e.key === "Escape" && searchHits) {
+        e.preventDefault();
+        clearSearch();
+      }
+    }
+    window.addEventListener("keydown", onHotkey);
+    return () => window.removeEventListener("keydown", onHotkey);
+  }, [searchHits, clearSearch]);
 
   const loadDrives = useCallback(async () => {
     const next = await listDrives();
@@ -205,6 +257,8 @@ export function FileBrowserApp() {
   async function activate(entry: FsEntry) {
     if (entry.kind === "dir" || entry.kind === "link") {
       setMobileNav(false);
+      setSearchHits(null);
+      setSearchTruncated(false);
       await openPath(entry.path);
       return;
     }
@@ -426,15 +480,49 @@ export function FileBrowserApp() {
             </button>
           )}
         </div>
-        <div className="relative hidden w-44 sm:block">
-          <Search className="pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-fg-subtle" />
-          <Input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Filter"
-            className="h-8 pl-8 text-xs"
-          />
+        <div className={cn("min-w-0", searchOpen || searchHits ? "flex flex-1" : "hidden w-44 sm:flex sm:w-52")}>
+          <form
+            className="relative w-full"
+            onSubmit={(e) => {
+              e.preventDefault();
+              void runSearch();
+            }}
+          >
+            <Search className="pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-fg-subtle" />
+            <Input
+              ref={searchRef}
+              value={query}
+              onChange={(e) => {
+                setQuery(e.target.value);
+                if (searchHits) setSearchHits(null);
+              }}
+              placeholder="Search this folder"
+              className="h-8 pr-8 pl-8 text-xs"
+              aria-label="Search files"
+            />
+            {query ? (
+              <button
+                type="button"
+                className="absolute top-1/2 right-1.5 -translate-y-1/2 text-fg-subtle hover:text-fg"
+                onClick={clearSearch}
+                aria-label="Clear search"
+              >
+                <X className="size-3.5" />
+              </button>
+            ) : null}
+          </form>
         </div>
+        <span className={searchOpen || searchHits ? "hidden sm:inline-flex" : "sm:hidden"}>
+          <IconBtn
+            label="Search"
+            onClick={() => {
+              setSearchOpen(true);
+              queueMicrotask(() => searchRef.current?.focus());
+            }}
+          >
+            <Search />
+          </IconBtn>
+        </span>
         <div className="flex items-center gap-0.5">
           <IconBtn label={showHidden ? "Hide hidden" : "Show hidden"} onClick={() => setShowHidden((v) => !v)}>
             {showHidden ? <Eye /> : <EyeOff />}
@@ -519,19 +607,45 @@ export function FileBrowserApp() {
               Delete
             </Button>
             <div className="ml-auto hidden text-xs text-fg-subtle sm:block">
-              {visible.length} {visible.length === 1 ? "item" : "items"}
+              {searching
+                ? "Searching…"
+                : searchHits
+                  ? `${searchHits.length} match${searchHits.length === 1 ? "" : "es"}${searchTruncated ? "+" : ""}`
+                  : `${visible.length} ${visible.length === 1 ? "item" : "items"}`}
             </div>
           </div>
+
+          {searchHits ? (
+            <div className="flex shrink-0 items-center gap-2 border-b border-border bg-bg-elevated px-3 py-2 text-xs text-fg-muted">
+              <Search className="size-3.5 shrink-0" />
+              <span className="min-w-0 flex-1 truncate">
+                Results for “{query}” in this folder
+                {searchTruncated ? " (showing first matches)" : ""}
+              </span>
+              <Button variant="ghost" size="sm" onClick={clearSearch}>
+                Clear
+              </Button>
+            </div>
+          ) : null}
 
           <div className="min-h-0 flex-1 overflow-auto">
             {loading && !listing ? (
               <div className="grid h-full place-items-center text-fg-subtle">
                 <Loader2 className="size-6 animate-spin" />
               </div>
+            ) : searching ? (
+              <div className="grid h-full place-items-center text-sm text-fg-muted">
+                <span className="flex items-center gap-2">
+                  <Loader2 className="size-4 animate-spin" />
+                  Searching this folder…
+                </span>
+              </div>
             ) : view === "list" ? (
               <FileTable
                 entries={visible}
                 selected={selected}
+                showFolder={Boolean(searchHits)}
+                emptyLabel={searchHits ? "No matches" : undefined}
                 onSelect={(e) => void inspect(e)}
                 onOpen={(e) => void activate(e)}
               />
@@ -539,6 +653,7 @@ export function FileBrowserApp() {
               <FileGrid
                 entries={visible}
                 selected={selected}
+                emptyLabel={searchHits ? "No matches" : undefined}
                 onSelect={(e) => void inspect(e)}
                 onOpen={(e) => void activate(e)}
               />
@@ -769,19 +884,103 @@ function FileTable({
   selected,
   onSelect,
   onOpen,
+  showFolder,
+  emptyLabel,
 }: {
   entries: FsEntry[];
   selected: string | null;
   onSelect: (entry: FsEntry) => void;
   onOpen: (entry: FsEntry) => void;
+  showFolder?: boolean;
+  emptyLabel?: string;
 }) {
   if (entries.length === 0) {
     return (
       <div className="grid h-full min-h-48 place-items-center px-6 text-center text-sm text-fg-muted">
-        This folder is empty
+        {emptyLabel ?? "This folder is empty"}
       </div>
     );
   }
+  return (
+    <>
+      <ul className="divide-y divide-border md:hidden">
+        {entries.map((entry) => {
+          const active = selected === entry.path;
+          const folder = "folder" in entry && typeof entry.folder === "string" ? entry.folder : "";
+          return (
+            <li key={entry.path}>
+              <button
+                type="button"
+                onClick={() => onOpen(entry)}
+                className={cn(
+                  "flex min-h-14 w-full items-center gap-3 px-3 py-3 text-left",
+                  active ? "bg-bg-subtle" : "active:bg-bg-elevated",
+                )}
+              >
+                <FileGlyph
+                  category={entry.category}
+                  className={entry.kind === "dir" ? "text-fg" : "text-fg-muted"}
+                />
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-sm">{entry.name}</span>
+                  <span className="block truncate font-mono text-[11px] text-fg-subtle">
+                    {showFolder && folder ? folder : entry.kind === "dir" ? "Folder" : formatBytes(entry.size)}
+                  </span>
+                </span>
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+      <table className="hidden w-full min-w-[28rem] text-left text-sm md:table">
+        <thead className="sticky top-0 bg-bg text-[11px] tracking-wide text-fg-subtle uppercase">
+          <tr className="border-b border-border">
+            <th className="px-3 py-2 font-medium">Name</th>
+            {showFolder ? <th className="px-3 py-2 font-medium">Location</th> : null}
+            <th className="w-28 px-3 py-2 font-medium">Size</th>
+            <th className="w-48 px-3 py-2 font-medium">Modified</th>
+          </tr>
+        </thead>
+        <tbody>
+          {entries.map((entry) => {
+            const active = selected === entry.path;
+            const folder = "folder" in entry && typeof entry.folder === "string" ? entry.folder : "";
+            return (
+              <tr
+                key={entry.path}
+                onClick={() => onSelect(entry)}
+                onDoubleClick={() => onOpen(entry)}
+                className={cn(
+                  "cursor-default border-b border-border/70",
+                  active ? "bg-bg-subtle" : "hover:bg-bg-elevated",
+                )}
+              >
+                <td className="px-3 py-2.5">
+                  <span className="flex min-h-10 min-w-0 items-center gap-2">
+                    <FileGlyph
+                      category={entry.category}
+                      className={entry.kind === "dir" ? "text-fg" : "text-fg-muted"}
+                    />
+                    <span className="truncate">{entry.name}</span>
+                  </span>
+                </td>
+                {showFolder ? (
+                  <td className="max-w-[16rem] truncate px-3 py-2.5 font-mono text-[11px] text-fg-muted">
+                    {folder}
+                  </td>
+                ) : null}
+                <td className="px-3 py-2.5 font-mono text-xs tabular-nums text-fg-muted">
+                  {entry.kind === "dir" ? "—" : formatBytes(entry.size)}
+                </td>
+                <td className="px-3 py-2.5 text-xs text-fg-muted">{formatWhen(entry.mtime)}</td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </>
+  );
+}
   return (
     <>
       <ul className="divide-y divide-border md:hidden">
@@ -860,16 +1059,18 @@ function FileGrid({
   selected,
   onSelect,
   onOpen,
+  emptyLabel,
 }: {
   entries: FsEntry[];
   selected: string | null;
   onSelect: (entry: FsEntry) => void;
   onOpen: (entry: FsEntry) => void;
+  emptyLabel?: string;
 }) {
   if (entries.length === 0) {
     return (
       <div className="grid h-full place-items-center px-6 text-center text-sm text-fg-muted">
-        This folder is empty
+        {emptyLabel ?? "This folder is empty"}
       </div>
     );
   }

@@ -55,3 +55,15 @@ export type BinaryPreview = {
 };
 
 export type PreviewPayload = TextPreview | ImagePreview | BinaryPreview;
+
+export type SearchHit = FsEntry & {
+  folder: string;
+};
+
+export type SearchResult = {
+  root: string;
+  query: string;
+  hits: SearchHit[];
+  truncated: boolean;
+};
+
