@@ -1,0 +1,45 @@
+# Changelog
+
+All user-facing Drivebay versions. Newest first.
+
+## 3.14
+- Search walks subfolders.
+- Hidden folders (`.` names) are included when the eye is on.
+- Toggling the eye re-runs the current search.
+
+## 3.13
+- Opens on Home instead of Workspace.
+- Settings shows the version number.
+- Request a feature in Settings opens a GitHub issue.
+
+## 3.12
+- Home page no longer loads the file-browser module on the server (Windows 500).
+- Update force-resets to GitHub main.
+
+## 3.11
+- Removed leftover file-list code that crashed the home page.
+
+## 3.10
+- Fixed vite.config.ts typo that blocked Start.
+
+## 3.9
+- Stopped a Windows database crash from returning JSON 500.
+
+## 3.8
+- Search this folder (Enter or Ctrl/Cmd+K).
+
+## 3.7
+- Settings page (password + port).
+- Login lock stored in `data/` so Update does not wipe it.
+
+## 3.6
+- Random or static port at Install / Set port.
+
+## 3.5
+- Static port picker for router forwarding.
+
+## 3.4
+- Login works from public / Tailscale / phone addresses.
+
+## 3.3
+- Pinokio package, X: and Z: drives, password lock, file browser.

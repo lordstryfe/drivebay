@@ -1,3 +1,4 @@
 Drivebay for Pinokio — 3.14
 
 Search covers subfolders; hidden folders follow the eye toggle.
+Full notes: README Changelog on GitHub.
