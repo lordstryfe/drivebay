@@ -10,14 +10,20 @@ https://github.com/lordstryfe/drivebay
 
 ## Install in Pinokio (do this)
 
-1. Open **Pinokio** on your computer.
-2. Go to **Discover** (or **Download from URL**).
-3. Paste `https://github.com/lordstryfe/drivebay` and download.
-4. Click **Install**. Wait until it finishes.
-5. Click **Start**, then **Open Drivebay**.
-6. The first visit creates the **only** username and password. Pick something strong — Pinokio is already visible online, and this app can see every file on the machine.
-7. After that, anyone who opens it can only unlock. Nobody else can sign up.
-8. In the sidebar, open **X:**, **Z:**, and any other drives you want.
+1. If you already tried once, **delete the old copy first.** In File Explorer delete:
+
+   `Z:\pinokio\api\drivebay.git`
+
+   Do not skip this. Pinokio cannot update an app whose `pinokio.js` failed to load.
+
+2. Open **Pinokio**.
+3. Go to **Discover** (or **Download from URL**).
+4. Paste `https://github.com/lordstryfe/drivebay` and download.
+5. Click **Install**. Wait until it finishes.
+6. Click **Start**, then **Open Drivebay**.
+7. The first visit creates the **only** username and password. Pick something strong — Pinokio is already visible online, and this app can see every file on the machine.
+8. After that, anyone who opens it can only unlock. Nobody else can sign up.
+9. In the sidebar, open **X:**, **Z:**, and any other drives you want.
 
 ## After it is running
 
