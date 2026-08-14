@@ -4,12 +4,11 @@ module.exports = {
     {
       method: "shell.run",
       params: {
-        path: "app",
         env: {
           VITE_AUTH_ENABLED: "true",
           DRIVEBAY_PINOKIO: "true",
         },
-        message: "npm run dev -- --host 0.0.0.0 --port {{port}}",
+        message: "node run-dev.cjs",
         on: [
           {
             event: "/(http:\\/\\/[0-9.:]+)/",

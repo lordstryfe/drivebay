@@ -1,5 +1,5 @@
 module.exports = {
-  version: "3.4",
+  version: "3.5",
   title: "Drivebay",
   description: "Password-locked file browser for every drive on this machine.",
   icon: "icon.png",
@@ -10,10 +10,15 @@ module.exports = {
       start: info.running("start.js"),
       update: info.running("update.js"),
       reset: info.running("reset.js"),
+      port: info.running("port.js"),
     };
 
     if (running.install) {
       return [{ default: true, icon: "fa-solid fa-plug", text: "Installing", href: "install.js" }];
+    }
+
+    if (running.port) {
+      return [{ default: true, icon: "fa-solid fa-ethernet", text: "Setting port", href: "port.js" }];
     }
 
     if (installed) {
@@ -38,6 +43,7 @@ module.exports = {
 
       return [
         { default: true, icon: "fa-solid fa-power-off", text: "Start", href: "start.js" },
+        { icon: "fa-solid fa-ethernet", text: "Set port", href: "port.js" },
         { icon: "fa-solid fa-rotate", text: "Update", href: "update.js" },
         { icon: "fa-solid fa-plug", text: "Reinstall", href: "install.js" },
         { icon: "fa-regular fa-circle-xmark", text: "Factory reset", href: "reset.js" },
