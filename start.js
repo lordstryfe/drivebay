@@ -7,6 +7,7 @@ module.exports = {
         path: "app",
         env: {
           VITE_AUTH_ENABLED: "true",
+          DRIVEBAY_PINOKIO: "true",
         },
         message: "npm run dev -- --host 0.0.0.0 --port {{port}}",
         on: [

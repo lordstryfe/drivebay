@@ -101,10 +101,19 @@ const LOCAL_DEV_ORIGINS: string[] = [
   "http://127.0.0.1:8080",
   "http://[::1]:8080",
 ];
+// Pinokio start.js sets this. Public IP + random ports must be trusted or
+// email/password signup returns FORBIDDEN "Invalid origin".
+const pinokio = env("DRIVEBAY_PINOKIO") === "true";
 const baseURL = explicitBaseURL ?? {
   // Include loopback hosts so dynamic baseURL resolves for local email/password
   // (not only the preview wildcard).
-  allowedHosts: [...previewAllowedHosts, "localhost", "127.0.0.1", "[::1]"],
+  allowedHosts: [
+    ...previewAllowedHosts,
+    "localhost",
+    "127.0.0.1",
+    "[::1]",
+    ...(pinokio ? ["*"] : []),
+  ],
   // `auto` → trust both http:// and https:// expansions of allowedHosts
   // (preview is https; local dev is http).
   protocol: "auto" as const,
@@ -113,7 +122,7 @@ const baseURL = explicitBaseURL ?? {
 
 // Origins Better Auth accepts on credentialed POSTs (sign-up/sign-in, etc.).
 // Missing entries here surface as FORBIDDEN "Invalid origin".
-const trustedOrigins: string[] = explicitBaseURL
+const staticTrustedOrigins: string[] = explicitBaseURL
   ? [explicitBaseURL, ...LOCAL_DEV_ORIGINS]
   : [
       // Host wildcards (matched against Origin's host)
@@ -121,7 +130,20 @@ const trustedOrigins: string[] = explicitBaseURL
       // Full-origin wildcards (matched against Origin)
       ...previewAllowedHosts.flatMap((host) => [`https://${host}`, `http://${host}`]),
       ...LOCAL_DEV_ORIGINS,
+      ...(pinokio ? ["http://*", "https://*"] : []),
     ];
+const trustedOrigins = pinokio
+  ? async (request?: Request) => {
+      const extra: string[] = [...staticTrustedOrigins];
+      const origin = request?.headers.get("origin");
+      if (origin) extra.push(origin);
+      const host = request?.headers.get("x-forwarded-host") || request?.headers.get("host");
+      if (host) {
+        extra.push(`http://${host}`, `https://${host}`);
+      }
+      return extra;
+    }
+  : staticTrustedOrigins;
 
 const databaseUrl = env("DATABASE_URL");
 
@@ -143,7 +165,9 @@ const database = databaseUrl
   : { dialect: pgliteDialect(() => getPglite()), type: "postgres" as const };
 
 /** Session token cookie name — also read by the live-preview popup completion page. */
-export const SESSION_TOKEN_COOKIE = "__Host-grok-auth.session_token";
+export const SESSION_TOKEN_COOKIE = pinokio
+  ? "drivebay.session_token"
+  : "__Host-grok-auth.session_token";
 
 // Built separately so the `betterAuth({...})` call stays easy to edit without
 // breaking brackets (models often trip on the conditional plugin spread).
@@ -216,13 +240,26 @@ export const auth = betterAuth({
   // `http://localhost`, so local dev still works.)
   advanced: {
     useSecureCookies: false,
-    defaultCookieAttributes: { secure: true, sameSite: "lax", path: "/" },
-    cookies: {
-      session_token: { name: SESSION_TOKEN_COOKIE },
-      session_data: { name: "__Host-grok-auth.session_data" },
-      account_data: { name: "__Host-grok-auth.account_data" },
-      dont_remember: { name: "__Host-grok-auth.dont_remember" },
+    defaultCookieAttributes: {
+      // `__Host-` + Secure only work on https / localhost. Pinokio is plain
+      // http://public-ip:port — those cookies are silently dropped.
+      secure: !pinokio,
+      sameSite: "lax",
+      path: "/",
     },
+    cookies: pinokio
+      ? {
+          session_token: { name: "drivebay.session_token" },
+          session_data: { name: "drivebay.session_data" },
+          account_data: { name: "drivebay.account_data" },
+          dont_remember: { name: "drivebay.dont_remember" },
+        }
+      : {
+          session_token: { name: SESSION_TOKEN_COOKIE },
+          session_data: { name: "__Host-grok-auth.session_data" },
+          account_data: { name: "__Host-grok-auth.account_data" },
+          dont_remember: { name: "__Host-grok-auth.dont_remember" },
+        },
   },
 
   plugins: [
