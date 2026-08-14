@@ -3,13 +3,25 @@ const fs = require("fs");
 const path = require("path");
 
 const portFile = path.join(__dirname, "drivebay.port");
-let port = "42013";
+let mode = "random";
+let port = String(process.env.DRIVEBAY_FALLBACK_PORT || process.env.PORT || "42013").trim();
+
 if (fs.existsSync(portFile)) {
-  const raw = fs.readFileSync(portFile, "utf8").trim();
-  if (/^\d{2,5}$/.test(raw)) port = raw;
+  const raw = fs.readFileSync(portFile, "utf8").trim().toLowerCase();
+  if (raw === "random") {
+    mode = "random";
+  } else if (/^\d{2,5}$/.test(raw)) {
+    mode = "static";
+    port = raw;
+  }
 }
 
-console.log("Drivebay static port: " + port);
+console.log(
+  mode === "static"
+    ? "Drivebay static port: " + port
+    : "Drivebay random port: " + port,
+);
+
 const npmCmd = process.platform === "win32" ? "npm.cmd" : "npm";
 const child = spawn(
   npmCmd,

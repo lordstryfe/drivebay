@@ -1,3 +1,4 @@
-Drivebay for Pinokio — 3.5
+Drivebay for Pinokio — 3.6
 
-Pick a static port at Install (or later with Set port). Forward that one port.
+Install (or Set port) asks: Random or Static.
+Static keeps one port for forwarding. Random lets Pinokio pick each Start.

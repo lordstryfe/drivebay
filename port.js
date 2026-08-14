@@ -5,12 +5,22 @@ module.exports = {
       params: {
         title: "Change Drivebay port",
         description:
-          "Stop Drivebay first if it is running. Then pick the port you will forward on your router.",
+          "Stop Drivebay first if it is running. Static = same port every time. Random = Pinokio picks one each Start.",
         form: [
           {
+            type: "select",
+            key: "style",
+            title: "Port style",
+            items: [
+              { value: "static", text: "Static — I pick the port" },
+              { value: "random", text: "Random — new port each Start" },
+            ],
+            default: "static",
+          },
+          {
             key: "port",
-            title: "Static port",
-            description: "1024–65535",
+            title: "Port number (static only)",
+            description: "Ignored if you chose Random. Example: 42013",
             default: "42013",
           },
         ],
@@ -21,6 +31,7 @@ module.exports = {
       params: {
         message: "node save-port.cjs",
         env: {
+          DRIVEBAY_PORT_STYLE: "{{input.style}}",
           DRIVEBAY_PORT: "{{input.port}}",
         },
       },
@@ -28,7 +39,7 @@ module.exports = {
     {
       method: "notify",
       params: {
-        html: "Port saved. Click <b>Start</b> again.",
+        html: "Saved. Click <b>Start</b> again.",
       },
     },
   ],

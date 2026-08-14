@@ -5,12 +5,22 @@ module.exports = {
       params: {
         title: "Drivebay port",
         description:
-          "Pick one port and keep it. Forward this same port on your router so phones and the internet can reach Drivebay. Example: 42013.",
+          "Static keeps the same port every Start (easier to forward). Random lets Pinokio pick a new one each time.",
         form: [
           {
+            type: "select",
+            key: "style",
+            title: "Port style",
+            items: [
+              { value: "static", text: "Static — I pick the port" },
+              { value: "random", text: "Random — new port each Start" },
+            ],
+            default: "static",
+          },
+          {
             key: "port",
-            title: "Static port",
-            description: "1024–65535. Same number every time you Start.",
+            title: "Port number (static only)",
+            description: "Ignored if you chose Random. Example: 42013",
             default: "42013",
           },
         ],
@@ -21,6 +31,7 @@ module.exports = {
       params: {
         message: "node save-port.cjs",
         env: {
+          DRIVEBAY_PORT_STYLE: "{{input.style}}",
           DRIVEBAY_PORT: "{{input.port}}",
         },
       },
@@ -35,7 +46,7 @@ module.exports = {
     {
       method: "notify",
       params: {
-        html: "Drivebay installed. Click <b>Start</b>, then open it on that port. Change the port later with <b>Set port</b>.",
+        html: "Drivebay installed. Click <b>Start</b>. Change this later with <b>Set port</b>.",
       },
     },
   ],

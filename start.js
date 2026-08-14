@@ -7,6 +7,7 @@ module.exports = {
         env: {
           VITE_AUTH_ENABLED: "true",
           DRIVEBAY_PINOKIO: "true",
+          DRIVEBAY_FALLBACK_PORT: "{{port}}",
         },
         message: "node run-dev.cjs",
         on: [
