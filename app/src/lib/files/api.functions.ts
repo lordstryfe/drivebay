@@ -111,3 +111,23 @@ export const readFileBase64 = createServerFn({ method: "POST" })
       size: st.size,
     };
   });
+
+export const getSettings = createServerFn({ method: "GET" })
+  .middleware([authMiddleware])
+  .handler(async () => {
+    const settings = await import("./settings.server");
+    return settings.readAppSettings();
+  });
+
+export const savePortSettings = createServerFn({ method: "POST" })
+  .middleware([authMiddleware])
+  .validator(
+    z.object({
+      style: z.enum(["random", "static"]),
+      port: z.number().int().min(1024).max(65535),
+    }),
+  )
+  .handler(async ({ data }) => {
+    const settings = await import("./settings.server");
+    return settings.writePortSettings(data.style, data.port);
+  });

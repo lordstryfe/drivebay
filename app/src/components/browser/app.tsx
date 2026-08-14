@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate } from "@tanstack/react-router";
 import {
   ArrowUp,
   ChevronRight,
@@ -17,6 +18,7 @@ import {
   Pencil,
   RefreshCw,
   Search,
+  Settings,
   Trash2,
   Upload,
   X,
@@ -63,6 +65,7 @@ function errMessage(err: unknown): string {
 }
 
 export function FileBrowserApp() {
+  const navigate = useNavigate();
   const { user, isPending } = useCurrentUserState();
   const [drives, setDrives] = useState<Drive[]>([]);
   const [listing, setListing] = useState<DirListing | null>(null);
@@ -445,6 +448,9 @@ export function FileBrowserApp() {
         </div>
         <div className="hidden items-center gap-2 pl-1 md:flex">
           <span className="max-w-28 truncate text-xs text-fg-muted">{ownerName}</span>
+          <Button variant="ghost" size="icon-sm" aria-label="Settings" onClick={() => void navigate({ to: "/settings" })}>
+            <Settings className="size-3.5" />
+          </Button>
           <Button variant="ghost" size="sm" onClick={() => void signOut("/login")}>
             <LogOut className="size-3.5" />
             Lock
@@ -568,7 +574,18 @@ export function FileBrowserApp() {
             </Button>
           </div>
           {nav}
-          <div className="mt-auto border-t border-border p-3">
+          <div className="mt-auto space-y-2 border-t border-border p-3">
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={() => {
+                setMobileNav(false);
+                void navigate({ to: "/settings" });
+              }}
+            >
+              <Settings className="size-3.5" />
+              Settings
+            </Button>
             <Button variant="outline" className="w-full" onClick={() => void signOut("/login")}>
               <LogOut className="size-3.5" />
               Lock

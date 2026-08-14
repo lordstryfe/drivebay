@@ -29,7 +29,12 @@ const child = spawn(
   {
     cwd: path.join(__dirname, "app"),
     stdio: "inherit",
-    env: process.env,
+    env: {
+      ...process.env,
+      DRIVEBAY_PINOKIO: process.env.DRIVEBAY_PINOKIO || "true",
+      DRIVEBAY_DATA_DIR: path.join(__dirname, "data"),
+      DRIVEBAY_PORT_FILE: path.join(__dirname, "drivebay.port"),
+    },
     shell: true,
   },
 );

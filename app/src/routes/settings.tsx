@@ -1,0 +1,247 @@
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { ArrowLeft, HardDrive, Loader2, LogOut, Save } from "lucide-react";
+import { toast } from "sonner";
+import { authClient, signOut } from "@/lib/auth/client";
+import { useCurrentUserState } from "@/lib/auth/use-current-user";
+import { RedirectToSignIn } from "@/lib/auth/gates";
+import { emailToUsername } from "@/lib/files/identity";
+import { getSettings, savePortSettings } from "@/lib/files/api.functions";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+
+export const Route = createFileRoute("/settings")({ component: SettingsPage });
+
+function SettingsPage() {
+  const navigate = useNavigate();
+  const { user, isPending } = useCurrentUserState();
+  const [style, setStyle] = useState<"random" | "static">("static");
+  const [port, setPort] = useState("42013");
+  const [dataDir, setDataDir] = useState("");
+  const [loaded, setLoaded] = useState(false);
+  const [savingPort, setSavingPort] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const [savingPass, setSavingPass] = useState(false);
+
+  useEffect(() => {
+    let alive = true;
+    getSettings()
+      .then((s) => {
+        if (!alive) return;
+        setStyle(s.style);
+        setPort(String(s.port));
+        setDataDir(s.dataDir);
+        setLoaded(true);
+      })
+      .catch(() => {
+        if (alive) setLoaded(true);
+      });
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  if (isPending) {
+    return (
+      <div className="grid min-h-dvh place-items-center bg-bg">
+        <Loader2 className="size-6 animate-spin text-fg-subtle" />
+      </div>
+    );
+  }
+  if (!user) return <RedirectToSignIn />;
+
+  const ownerName = user.displayName || emailToUsername(user.primaryEmail);
+
+  async function onSavePort(e: React.FormEvent) {
+    e.preventDefault();
+    const n = Number(port);
+    setSavingPort(true);
+    try {
+      const next = await savePortSettings({
+        data: { style, port: Number.isFinite(n) ? n : 42013 },
+      });
+      setStyle(next.style);
+      setPort(String(next.port));
+      toast.success(
+        next.style === "static"
+          ? `Port saved: ${next.port}. Stop and Start Drivebay to apply.`
+          : "Random port saved. Stop and Start Drivebay to apply.",
+      );
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not save port");
+    } finally {
+      setSavingPort(false);
+    }
+  }
+
+  async function onChangePassword(e: React.FormEvent) {
+    e.preventDefault();
+    if (newPassword.length < 8) {
+      toast.error("Use at least 8 characters");
+      return;
+    }
+    if (newPassword !== confirm) {
+      toast.error("Passwords do not match");
+      return;
+    }
+    setSavingPass(true);
+    try {
+      const { error } = await authClient.changePassword({
+        currentPassword,
+        newPassword,
+        revokeOtherSessions: true,
+      });
+      if (error) throw new Error(error.message ?? "Could not change password");
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirm("");
+      toast.success("Password updated");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not change password");
+    } finally {
+      setSavingPass(false);
+    }
+  }
+
+  return (
+    <div className="flex min-h-dvh flex-col bg-bg text-fg">
+      <header className="flex h-12 shrink-0 items-center gap-2 border-b border-border px-3 md:px-4">
+        <Button variant="ghost" size="icon-sm" aria-label="Back" onClick={() => void navigate({ to: "/" })}>
+          <ArrowLeft className="size-4" />
+        </Button>
+        <HardDrive className="size-4 text-fg-muted" strokeWidth={1.7} />
+        <span className="font-mono text-[11px] tracking-[0.16em] text-fg-subtle uppercase">Settings</span>
+        <div className="ml-auto flex items-center gap-2">
+          <span className="hidden max-w-28 truncate text-xs text-fg-muted sm:block">{ownerName}</span>
+          <Button variant="ghost" size="sm" onClick={() => void signOut("/login")}>
+            <LogOut className="size-3.5" />
+            Lock
+          </Button>
+        </div>
+      </header>
+
+      <main className="mx-auto flex w-full max-w-xl flex-1 flex-col gap-8 px-4 py-8">
+        <section className="space-y-3">
+          <p className="font-mono text-[10px] tracking-[0.16em] text-fg-subtle uppercase">Account</p>
+          <div className="rounded-md border border-border bg-bg-elevated p-4">
+            <Label htmlFor="username">Username</Label>
+            <Input id="username" className="mt-1.5" value={ownerName} readOnly />
+            <p className="mt-2 text-xs text-fg-muted">
+              This lock stays after Update. It is stored in a data folder outside the files Git replaces.
+            </p>
+          </div>
+        </section>
+
+        <section className="space-y-3">
+          <p className="font-mono text-[10px] tracking-[0.16em] text-fg-subtle uppercase">Password</p>
+          <form className="space-y-3 rounded-md border border-border bg-bg-elevated p-4" onSubmit={onChangePassword}>
+            <div>
+              <Label htmlFor="current">Current password</Label>
+              <Input
+                id="current"
+                type="password"
+                className="mt-1.5"
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                autoComplete="current-password"
+              />
+            </div>
+            <div>
+              <Label htmlFor="next">New password</Label>
+              <Input
+                id="next"
+                type="password"
+                className="mt-1.5"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                autoComplete="new-password"
+              />
+            </div>
+            <div>
+              <Label htmlFor="confirm">Confirm new password</Label>
+              <Input
+                id="confirm"
+                type="password"
+                className="mt-1.5"
+                value={confirm}
+                onChange={(e) => setConfirm(e.target.value)}
+                autoComplete="new-password"
+              />
+            </div>
+            <Button type="submit" disabled={savingPass}>
+              {savingPass ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
+              Update password
+            </Button>
+          </form>
+        </section>
+
+        <section className="space-y-3">
+          <p className="font-mono text-[10px] tracking-[0.16em] text-fg-subtle uppercase">Port</p>
+          <form className="space-y-3 rounded-md border border-border bg-bg-elevated p-4" onSubmit={onSavePort}>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => setStyle("static")}
+                className={
+                  style === "static"
+                    ? "rounded-sm border border-border-strong bg-bg-subtle px-3 py-3 text-left text-sm"
+                    : "rounded-sm border border-border px-3 py-3 text-left text-sm text-fg-muted hover:bg-bg-subtle"
+                }
+              >
+                <span className="block font-medium text-fg">Static</span>
+                Same port every Start
+              </button>
+              <button
+                type="button"
+                onClick={() => setStyle("random")}
+                className={
+                  style === "random"
+                    ? "rounded-sm border border-border-strong bg-bg-subtle px-3 py-3 text-left text-sm"
+                    : "rounded-sm border border-border px-3 py-3 text-left text-sm text-fg-muted hover:bg-bg-subtle"
+                }
+              >
+                <span className="block font-medium text-fg">Random</span>
+                New port each Start
+              </button>
+            </div>
+            {style === "static" && (
+              <div>
+                <Label htmlFor="port">Port number</Label>
+                <Input
+                  id="port"
+                  className="mt-1.5 font-mono"
+                  inputMode="numeric"
+                  value={port}
+                  onChange={(e) => setPort(e.target.value.replace(/[^\d]/g, ""))}
+                />
+              </div>
+            )}
+            <p className="text-xs text-fg-muted">
+              After saving, stop Drivebay in Pinokio and click Start. Forward a static port on your router.
+            </p>
+            <Button type="submit" disabled={!loaded || savingPort}>
+              {savingPort ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
+              Save port
+            </Button>
+          </form>
+        </section>
+
+        <section className="space-y-3">
+          <p className="font-mono text-[10px] tracking-[0.16em] text-fg-subtle uppercase">Lock storage</p>
+          <div className="rounded-md border border-border bg-bg-elevated p-4">
+            <p className="text-sm text-fg-muted">
+              Username and password live in this folder so <span className="text-fg">Update</span> does not wipe them:
+            </p>
+            <p className="mt-2 break-all font-mono text-xs text-fg">{dataDir || "…"}</p>
+            <Link to="/" className="mt-4 inline-flex text-sm text-fg-muted underline-offset-4 hover:text-fg hover:underline">
+              Back to files
+            </Link>
+          </div>
+        </section>
+      </main>
+    </div>
+  );
+}

@@ -21,4 +21,6 @@ app/.tanstack
 app/.vercel
 app/.nitro
 app/.data
+data
 drivebay.port
+

@@ -25,7 +25,10 @@ https://github.com/lordstryfe/drivebay-pinokio
 9. After that, anyone who opens it can only unlock. Nobody else can sign up.
 10. In the sidebar, open **X:**, **Z:**, and any other drives you want.
 
-Change this later with **Set port**, then Start again. Version **3.6**.
+Change this later with **Set port** or the in-app **Settings** page, then Start again. Version **3.7**.
+
+Your username and password are stored in a `data` folder next to the app. **Update does not delete them.**
+
 
 
 

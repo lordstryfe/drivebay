@@ -1,4 +1,3 @@
-Drivebay for Pinokio — 3.6
+Drivebay for Pinokio — 3.7
 
-Install (or Set port) asks: Random or Static.
-Static keeps one port for forwarding. Random lets Pinokio pick each Start.
+Settings page. Login lock is stored in data/ and survives Update.
