@@ -1,4 +1,3 @@
-Drivebay for Pinokio — 3.12
+Drivebay for Pinokio — 3.13
 
-Home page no longer loads the file browser on the server.
-Update now force-resets to GitHub main.
+Opens on Home. Version on Settings. Feature requests go to GitHub.

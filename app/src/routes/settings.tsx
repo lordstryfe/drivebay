@@ -1,12 +1,13 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ArrowLeft, HardDrive, Loader2, LogOut, Save } from "lucide-react";
+import { ArrowLeft, ExternalLink, HardDrive, Loader2, LogOut, Save } from "lucide-react";
 import { toast } from "sonner";
 import { authClient, signOut } from "@/lib/auth/client";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
 import { RedirectToSignIn } from "@/lib/auth/gates";
 import { emailToUsername } from "@/lib/files/identity";
 import { getSettings, savePortSettings } from "@/lib/files/api.functions";
+import { APP_VERSION, FEATURE_REQUEST_URL } from "@/lib/version";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -114,6 +115,7 @@ function SettingsPage() {
         </Button>
         <HardDrive className="size-4 text-fg-muted" strokeWidth={1.7} />
         <span className="font-mono text-[11px] tracking-[0.16em] text-fg-subtle uppercase">Settings</span>
+        <span className="font-mono text-[11px] text-fg-subtle">{APP_VERSION}</span>
         <div className="ml-auto flex items-center gap-2">
           <span className="hidden max-w-28 truncate text-xs text-fg-muted sm:block">{ownerName}</span>
           <Button variant="ghost" size="sm" onClick={() => void signOut("/login")}>
@@ -230,12 +232,22 @@ function SettingsPage() {
         </section>
 
         <section className="space-y-3">
-          <p className="font-mono text-[10px] tracking-[0.16em] text-fg-subtle uppercase">Lock storage</p>
+          <p className="font-mono text-[10px] tracking-[0.16em] text-fg-subtle uppercase">About</p>
           <div className="rounded-md border border-border bg-bg-elevated p-4">
-            <p className="text-sm text-fg-muted">
-              Username and password live in this folder so <span className="text-fg">Update</span> does not wipe them:
+            <p className="text-sm text-fg">Drivebay {APP_VERSION}</p>
+            <p className="mt-1 text-xs text-fg-muted">
+              Password-locked file browser for this machine. Feature ideas go to GitHub so they stay in one place.
             </p>
-            <p className="mt-2 break-all font-mono text-xs text-fg">{dataDir || "…"}</p>
+            <a
+              href={FEATURE_REQUEST_URL}
+              target="_blank"
+              rel="noreferrer"
+              className="mt-3 inline-flex items-center gap-1.5 text-sm text-fg-muted underline-offset-4 hover:text-fg hover:underline"
+            >
+              Request a feature
+              <ExternalLink className="size-3.5" />
+            </a>
+            <p className="mt-2 break-all font-mono text-[11px] text-fg-subtle">{dataDir || "…"}</p>
             <Link to="/" className="mt-4 inline-flex text-sm text-fg-muted underline-offset-4 hover:text-fg hover:underline">
               Back to files
             </Link>

@@ -192,10 +192,9 @@ export function FileBrowserApp() {
         if (!alive) return;
         const candidates = [
           defaultStartPath(nextDrives),
-          nextDrives.find((d) => d.kind === "project")?.path ?? null,
-          "/workspace",
           nextDrives.find((d) => d.kind === "home")?.path ?? null,
-          "/",
+          nextDrives.find((d) => d.kind === "volume")?.path ?? null,
+          nextDrives[0]?.path ?? null,
         ].filter((p, i, arr): p is string => Boolean(p) && arr.indexOf(p) === i);
 
         const tryOpen = async (target: string, silent: boolean) => {

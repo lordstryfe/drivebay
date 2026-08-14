@@ -53,9 +53,9 @@ export function splitPath(p: string): { label: string; path: string }[] {
 }
 
 export function defaultStartPath(drives: { kind: string; path: string }[]): string {
-  const project = drives.find((d) => d.kind === "project");
-  if (project) return project.path;
   const home = drives.find((d) => d.kind === "home");
   if (home) return home.path;
+  const volume = drives.find((d) => d.kind === "volume");
+  if (volume) return volume.path;
   return drives[0]?.path ?? "/";
 }

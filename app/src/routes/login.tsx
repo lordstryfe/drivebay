@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { hasOwner } from "@/lib/files/api.functions";
 import { usernameToEmail } from "@/lib/files/identity";
+import { APP_VERSION } from "@/lib/version";
 
 export const Route = createFileRoute("/login")({ ssr: false, component: LoginPage });
 
@@ -162,7 +163,7 @@ function LoginPage() {
             {busy ? "Working…" : owned ? "Unlock" : "Create lock"}
           </Button>
         </form>
-        <p className="mt-4 text-center font-mono text-[10px] tracking-wide text-fg-subtle">3.12</p>
+        <p className="mt-4 text-center font-mono text-[10px] tracking-wide text-fg-subtle">{APP_VERSION}</p>
       </section>
     </main>
   );
