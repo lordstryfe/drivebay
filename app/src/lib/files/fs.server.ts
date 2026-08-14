@@ -340,9 +340,6 @@ export async function listEntries(dirPath: string, showHidden: boolean): Promise
 
 const SKIP_DIR_NAMES = new Set([
   "node_modules",
-  ".git",
-  ".svn",
-  ".hg",
   "$recycle.bin",
   "system volume information",
   "windows",
@@ -351,6 +348,7 @@ const SKIP_DIR_NAMES = new Set([
   "programdata",
   "recovery",
 ]);
+const HIDDEN_VCS_DIRS = new Set([".git", ".svn", ".hg"]);
 
 export async function searchEntries(
   rootPath: string,
@@ -399,7 +397,9 @@ export async function searchEntries(
           return;
         }
       }
-      if (st.isDirectory() && !st.isSymbolicLink() && !SKIP_DIR_NAMES.has(lower)) {
+      if (st.isDirectory() && !st.isSymbolicLink()) {
+        if (SKIP_DIR_NAMES.has(lower)) continue;
+        if (!showHidden && HIDDEN_VCS_DIRS.has(lower)) continue;
         await walk(full);
       }
     }

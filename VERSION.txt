@@ -1,3 +1,3 @@
-Drivebay for Pinokio — 3.13
+Drivebay for Pinokio — 3.14
 
-Opens on Home. Version on Settings. Feature requests go to GitHub.
+Search covers subfolders; hidden folders follow the eye toggle.

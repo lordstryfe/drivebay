@@ -137,6 +137,13 @@ export function FileBrowserApp() {
   }, []);
 
   useEffect(() => {
+    if (!searchHits) return;
+    void runSearch();
+    // Re-run after the hidden-files eye is toggled.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showHidden]);
+
+  useEffect(() => {
     function onHotkey(e: KeyboardEvent) {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
         e.preventDefault();
@@ -618,7 +625,7 @@ export function FileBrowserApp() {
             <div className="flex shrink-0 items-center gap-2 border-b border-border bg-bg-elevated px-3 py-2 text-xs text-fg-muted">
               <Search className="size-3.5 shrink-0" />
               <span className="min-w-0 flex-1 truncate">
-                Results for “{query}” in this folder
+                Results for “{query}” in this folder and its subfolders
                 {searchTruncated ? " (showing first matches)" : ""}
               </span>
               <Button variant="ghost" size="sm" onClick={clearSearch}>
