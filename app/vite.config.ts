@@ -27,7 +27,6 @@ function pgliteBootstrapPlugin(): Plugin {
       } catch (err) {
         console.error("[app-builder] DB bootstrap failed:", err);
       }
-      }
     },
   };
 }

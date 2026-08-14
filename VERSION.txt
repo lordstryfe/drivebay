@@ -1,3 +1,3 @@
-Drivebay for Pinokio — 3.9
+Drivebay for Pinokio — 3.10
 
-Fix blank JSON 500 on open. DB no longer kills the page if Windows persist fails.
+Fixed a typo in vite.config.ts that stopped Start.
