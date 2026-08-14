@@ -8,7 +8,7 @@ module.exports = {
         env: {
           VITE_AUTH_ENABLED: "true",
         },
-        message: "npm run dev -- --host 127.0.0.1 --port {{port}}",
+        message: "npm run dev -- --host 0.0.0.0 --port {{port}}",
         on: [
           {
             event: "/(http:\\/\\/[0-9.:]+)/",
