@@ -105,14 +105,12 @@ const LOCAL_DEV_ORIGINS: string[] = [
 // email/password signup returns FORBIDDEN "Invalid origin".
 const pinokio = env("DRIVEBAY_PINOKIO") === "true";
 const baseURL = explicitBaseURL ?? {
-  // Include loopback hosts so dynamic baseURL resolves for local email/password
-  // (not only the preview wildcard).
   allowedHosts: [
     ...previewAllowedHosts,
     "localhost",
     "127.0.0.1",
     "[::1]",
-    ...(pinokio ? ["*"] : []),
+    "*",
   ],
   // `auto` → trust both http:// and https:// expansions of allowedHosts
   // (preview is https; local dev is http).
@@ -130,7 +128,8 @@ const staticTrustedOrigins: string[] = explicitBaseURL
       // Full-origin wildcards (matched against Origin)
       ...previewAllowedHosts.flatMap((host) => [`https://${host}`, `http://${host}`]),
       ...LOCAL_DEV_ORIGINS,
-      ...(pinokio ? ["http://*", "https://*"] : []),
+      "http://*",
+      "https://*",
     ];
 const trustedOrigins = pinokio
   ? async (request?: Request) => {

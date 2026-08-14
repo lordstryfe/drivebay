@@ -111,27 +111,37 @@ async function createPgliteSql(): Promise<Sql> {
     const { PGlite } = await import("@electric-sql/pglite");
     const { mkdirSync } = await import("node:fs");
     const { resolve } = await import("node:path");
+    const parsers = {
+      [OID_INT8]: Number,
+      [OID_DATE]: identity,
+      [OID_INTERVAL]: identity,
+    };
     const fromEnv = process.env.DRIVEBAY_DATA_DIR?.trim();
     const dataDir = resolve(
       fromEnv ||
         (process.env.DRIVEBAY_PINOKIO === "true"
           ? resolve(process.cwd(), "..", "data")
           : resolve(process.cwd(), "data")),
-    );
-    mkdirSync(dataDir, { recursive: true });
-    const pg = new PGlite({
-      dataDir,
-      parsers: {
-        [OID_INT8]: Number,
-        [OID_DATE]: identity,
-        [OID_INTERVAL]: identity,
-      },
-    });
-    await pg.waitReady;
-    await pg.exec(
-      "create table if not exists _migrations (name text primary key, applied_at timestamptz not null default now())",
-    );
-    return pg;
+    ).replace(/\\/g, "/");
+    async function open(dir?: string) {
+      const pg = new PGlite({
+        ...(dir ? { dataDir: dir } : {}),
+        parsers,
+        relaxedDurability: true,
+      });
+      await pg.waitReady;
+      await pg.exec(
+        "create table if not exists _migrations (name text primary key, applied_at timestamptz not null default now())",
+      );
+      return pg;
+    }
+    try {
+      mkdirSync(dataDir, { recursive: true });
+      return await open(dataDir);
+    } catch (err) {
+      console.error("[db] Persistent PGLite failed, using memory:", err);
+      return await open();
+    }
   })().catch((err) => {
     globalRef.__pgliteInstance__ = undefined;
     throw err;

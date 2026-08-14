@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { hasOwner } from "@/lib/files/api.functions";
 import { usernameToEmail } from "@/lib/files/identity";
 
-export const Route = createFileRoute("/login")({ component: LoginPage });
+export const Route = createFileRoute("/login")({ ssr: false, component: LoginPage });
 
 function LoginPage() {
   const navigate = useNavigate();
