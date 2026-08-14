@@ -24,7 +24,8 @@ https://github.com/lordstryfe/drivebay-pinokio
 8. After that, anyone who opens it can only unlock. Nobody else can sign up.
 9. In the sidebar, open **X:**, **Z:**, and any other drives you want.
 
-If it loaded correctly you will see version **3.2**, and the folder will contain a file named `VERSION.txt`.
+If it loaded correctly you will see version **3.3**, and the folder will contain `VERSION.txt` plus an `app` folder.
+
 
 ## After it is running
 

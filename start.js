@@ -4,6 +4,7 @@ module.exports = {
     {
       method: "shell.run",
       params: {
+        path: "app",
         env: {
           VITE_AUTH_ENABLED: "true",
         },

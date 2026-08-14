@@ -1,10 +1,10 @@
 module.exports = {
-  version: "3.2",
+  version: "3.3",
   title: "Drivebay",
   description: "Password-locked file browser for every drive on this machine.",
   icon: "icon.png",
   menu: async (_kernel, info) => {
-    const installed = info.exists("node_modules");
+    const installed = info.exists("app/node_modules");
     const running = {
       install: info.running("install.js"),
       start: info.running("start.js"),

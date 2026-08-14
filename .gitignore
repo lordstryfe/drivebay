@@ -14,3 +14,10 @@ screenshots
 artifacts
 .grok
 .node_modules.lock
+app/node_modules
+app/dist
+app/.output
+app/.tanstack
+app/.vercel
+app/.nitro
+app/.data

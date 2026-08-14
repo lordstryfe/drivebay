@@ -3,7 +3,7 @@ module.exports = {
     {
       method: "fs.rm",
       params: {
-        path: "node_modules",
+        path: "app/node_modules",
       },
     },
     {
