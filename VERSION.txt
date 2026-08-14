@@ -1,3 +1,3 @@
-Drivebay for Pinokio — 3.10
+Drivebay for Pinokio — 3.11
 
-Fixed a typo in vite.config.ts that stopped Start.
+Removed leftover code that crashed the file list page.
